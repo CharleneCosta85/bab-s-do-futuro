@@ -1,8 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize Gemini
-// Note: In a real environment, ensure process.env.API_KEY is set.
-const apiKey = process.env.API_KEY || ''; 
+// Note: In a real environment, ensure VITE_GEMINI_API_KEY is set in .env.local
+const apiKey = (import.meta.env as Record<string, any>).VITE_GEMINI_API_KEY || ''; 
 const ai = new GoogleGenAI({ apiKey });
 
 const SYSTEM_INSTRUCTION = `
