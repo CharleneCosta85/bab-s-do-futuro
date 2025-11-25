@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 // Initialize Gemini
 // Note: In a real environment, ensure VITE_GEMINI_API_KEY is set in .env.local
 const apiKey = (import.meta.env as Record<string, any>).VITE_GEMINI_API_KEY || ''; 
+console.log('Chave da API carregada:', apiKey ? '✅ Sim' : '❌ Não');
 const ai = new GoogleGenAI({ apiKey });
 
 const SYSTEM_INSTRUCTION = `
