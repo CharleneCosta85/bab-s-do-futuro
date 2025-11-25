@@ -4,7 +4,11 @@ import { GoogleGenAI } from "@google/genai";
 // Note: In a real environment, ensure VITE_GEMINI_API_KEY is set in .env.local
 const apiKey = (import.meta.env as Record<string, any>).VITE_GEMINI_API_KEY || ''; 
 console.log('Chave da API carregada:', apiKey ? '✅ Sim' : '❌ Não');
-const ai = new GoogleGenAI({ apiKey });
+
+let ai: GoogleGenAI | null = null;
+if (apiKey) {
+  ai = new GoogleGenAI({ apiKey });
+}
 
 const SYSTEM_INSTRUCTION = `
 Você é o assistente virtual executivo da startup "Babás do Futuro".
@@ -26,11 +30,15 @@ Seja profissional, entusiasta e use emojis ocasionais. Se perguntarem sobre enco
 
 export const sendMessageToGemini = async (message: string, history: {role: string, parts: {text: string}[]}[] = []): Promise<string> => {
   if (!apiKey) {
-    return "⚠️ A chave da API Gemini não foi configurada. Por favor, configure a variável de ambiente API_KEY para interagir com o assistente.";
+    return "⚠️ A chave da API Gemini não foi configurada. Por favor, configure a variável de ambiente VITE_GEMINI_API_KEY para interagir com o assistente.";
+  }
+
+  if (!ai) {
+    return "⚠️ Erro ao inicializar a API Gemini. Verifique sua chave de API.";
   }
 
   try {
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-2.0-flash';
     
     const chat = ai.chats.create({
       model: model,
@@ -39,15 +47,23 @@ export const sendMessageToGemini = async (message: string, history: {role: strin
         temperature: 0.7,
       },
       history: history.map(h => ({
-          role: h.role,
+          role: h.role as 'user' | 'model',
           parts: h.parts
       }))
     });
 
-    const result = await chat.sendMessage({ message });
-    return result.text || "Desculpe, não consegui processar sua resposta.";
+    const response = await chat.sendMessage({ message });
+    const textContent = response.text;
+    
+    if (!textContent) {
+      return "Desculpe, não consegui processar sua resposta.";
+    }
+    
+    return textContent;
   } catch (error) {
     console.error("Gemini API Error:", error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Detalhes do erro:", errorMsg);
     return "Desculpe, ocorreu um erro ao conectar com a inteligência artificial. Tente novamente mais tarde.";
   }
 };
